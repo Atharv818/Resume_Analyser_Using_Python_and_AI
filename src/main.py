@@ -1,11 +1,16 @@
-from flask import Flask, request, render_template     # Flas web framework to handle HTTP requests
-import fitz  # PyMuPDF     used to extract text from pdf
+import os
+from flask import Flask, request, render_template
+import fitz  # PyMuPDF
 from analyse_pdf import analyse_resume_gemini
-import os                   # handling file paths and creating directories
 
-app = Flask(__name__)           # create flask instance
-app.config['UPLOAD_FOLDER'] = 'uploads'               # config a folder to store uploaded resumes
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)             # ensure thye folder exist
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+app = Flask(
+    __name__,
+    template_folder=os.path.join(BASE_DIR, "templates"),
+)
+app.config["UPLOAD_FOLDER"] = os.path.join(BASE_DIR, "uploads")
+os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 
 
 def extract_text_from_resume(pdf_path):
@@ -13,17 +18,18 @@ def extract_text_from_resume(pdf_path):
     text = ""
     for page in doc:
         text += page.get_text()
+    doc.close()
     return text
 
 
-@app.route("/", methods=["GET", "POST"])       # @ defines the home page URL
+@app.route("/", methods=["GET", "POST"])
 def index():
     if request.method == "POST":
-        resume_file = request.files["resume"]
-        job_description = request.form["job_description"]
+        resume_file = request.files.get("resume")
+        job_description = request.form.get("job_description", "")
 
-        if resume_file.filename.endswith(".pdf"):
-            pdf_path = os.path.join(app.config['UPLOAD_FOLDER'], resume_file.filename)
+        if resume_file and resume_file.filename.lower().endswith(".pdf"):
+            pdf_path = os.path.join(app.config["UPLOAD_FOLDER"], resume_file.filename)
             resume_file.save(pdf_path)
 
             resume_content = extract_text_from_resume(pdf_path)
@@ -31,8 +37,10 @@ def index():
 
             return render_template("index.html", result=result)
 
+        return render_template("index.html", result="Please upload a valid PDF file.")
+
     return render_template("index.html", result=None)
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host="0.0.0.0", port=5000)
