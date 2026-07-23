@@ -2,7 +2,7 @@
 
 A Flask web app that uses Google Gemini AI to analyze PDF resumes against a target job description — providing a match score, missing skills, and improvement suggestions.
 
-🔗 **Live Demo:** https://resume-analyzer-ai.onrender.com
+🔗 **Live Demo:** https://resume-analyzer-ai-zz71.onrender.com
 
 ## How It Works
 1. User uploads a resume (PDF) and pastes a job description
